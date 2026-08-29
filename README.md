@@ -172,3 +172,6 @@ Se tiver problemas:
 ## 📝 LICENÇA
 
 Todos os direitos reservados - AMBENG Construções
+
+
+✨ App ready for deployment!
