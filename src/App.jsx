@@ -1,115 +1,264 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
 import './App.css'
 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState('home')
+  const [currentPage, setCurrentPage] = useState('pessoas')
+  const [pessoas, setPessoas] = useState([])
+  const [receitas, setReceitas] = useState([])
+  const [despesas, setDespesas] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // Buscar dados do Supabase
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      setLoading(true)
+      
+      // Buscar Pessoas
+      const { data: pessoasData } = await supabase
+        .from('pessoas')
+        .select('*')
+      setPessoas(pessoasData || [])
+
+      // Buscar Receitas
+      const { data: receitasData } = await supabase
+        .from('receitas')
+        .select('*')
+      setReceitas(receitasData || [])
+
+      // Buscar Despesas
+      const { data: despesasData } = await supabase
+        .from('despesas')
+        .select('*')
+      setDespesas(despesasData || [])
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* HEADER */}
-      <header className="bg-blue-600 text-white p-4 shadow-lg">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">AMBENG SGI</h1>
-          <nav className="flex gap-4">
-            <button 
-              onClick={() => setCurrentPage('home')}
-              className={`px-4 py-2 rounded ${currentPage === 'home' ? 'bg-blue-800' : 'hover:bg-blue-500'}`}
+      {/* TOP BAR */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-blue-600">AMBENG SGI</h1>
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+              B
+            </div>
+            <span className="text-sm text-gray-600">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT */}
+      <div className="flex min-h-[calc(100vh-60px)]">
+        {/* SIDEBAR */}
+        <div className="w-64 bg-white shadow-sm border-r">
+          <nav className="p-4 space-y-2">
+            <button
+              onClick={() => setCurrentPage('pessoas')}
+              className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${
+                currentPage === 'pessoas'
+                  ? 'bg-blue-50 text-blue-600 font-semibold border-l-4 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
             >
-              Home
+              <span>ðŸ‘¥</span> Pessoas
             </button>
-            <button 
-              onClick={() => setCurrentPage('dashboard')}
-              className={`px-4 py-2 rounded ${currentPage === 'dashboard' ? 'bg-blue-800' : 'hover:bg-blue-500'}`}
+            <button
+              onClick={() => setCurrentPage('financeiro')}
+              className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-3 ${
+                currentPage === 'financeiro'
+                  ? 'bg-blue-50 text-blue-600 font-semibold border-l-4 border-blue-600'
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
             >
-              Dashboard
-            </button>
-            <button 
-              onClick={() => setCurrentPage('kanban')}
-              className={`px-4 py-2 rounded ${currentPage === 'kanban' ? 'bg-blue-800' : 'hover:bg-blue-500'}`}
-            >
-              Kanban
+              <span>ðŸ’°</span> Financeiro
             </button>
           </nav>
         </div>
-      </header>
 
-      {/* CONTEÃšDO */}
-      <main className="max-w-7xl mx-auto p-6">
-        {/* HOME */}
-        {currentPage === 'home' && (
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-4xl font-bold">A</span>
+        {/* CONTENT AREA */}
+        <div className="flex-1 p-6">
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="animate-spin w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full mx-auto mb-4"></div>
+                <p className="text-gray-600">Carregando dados...</p>
               </div>
             </div>
-            <h2 className="text-4xl font-bold text-gray-800 mb-4">AMBENG SGI</h2>
-            <p className="text-xl text-gray-600 mb-6">Sistema de GestÃ£o de SeguranÃ§a e SaÃºde do Trabalho</p>
-            <div className="inline-block bg-green-50 border-2 border-green-200 rounded-lg p-6">
-              <p className="text-lg text-green-600 font-semibold">
-                âœ… App Online e Funcionando!
-              </p>
-            </div>
-            <p className="text-gray-600 mt-8">Use o menu acima para navegar entre as seÃ§Ãµes</p>
-          </div>
-        )}
+          ) : (
+            <>
+              {/* PESSOAS */}
+              {currentPage === 'pessoas' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Pessoas</h2>
+                    <p className="text-gray-600">GestÃ£o de colaboradores e funcionÃ¡rios</p>
+                  </div>
 
-        {/* DASHBOARD */}
-        {currentPage === 'dashboard' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg shadow p-6">
-              <p className="text-gray-600 text-sm">Total de Empresas</p>
-              <p className="text-3xl font-bold text-blue-600">0</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <p className="text-gray-600 text-sm">Pessoas Cadastradas</p>
-              <p className="text-3xl font-bold text-green-600">0</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <p className="text-gray-600 text-sm">Tarefas Ativas</p>
-              <p className="text-3xl font-bold text-yellow-600">0</p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <p className="text-gray-600 text-sm">Obras em Andamento</p>
-              <p className="text-3xl font-bold text-red-600">0</p>
-            </div>
-          </div>
-        )}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xl font-bold">Colaboradores</h3>
+                      <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        + Adicionar
+                      </button>
+                    </div>
 
-        {/* KANBAN */}
-        {currentPage === 'kanban' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-bold text-lg mb-4 text-blue-600">ðŸ“‹ A Fazer</h3>
-              <div className="space-y-2">
-                <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
-                  <p className="font-semibold">Tarefa 1</p>
-                  <p className="text-sm text-gray-600">DescriÃ§Ã£o da tarefa</p>
+                    {pessoas.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>Nenhuma pessoa cadastrada</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="border-b">
+                            <tr className="text-left text-gray-600 font-semibold">
+                              <th className="pb-3">Nome</th>
+                              <th className="pb-3">Email</th>
+                              <th className="pb-3">FunÃ§Ã£o</th>
+                              <th className="pb-3">Status</th>
+                              <th className="pb-3">AÃ§Ãµes</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pessoas.map(pessoa => (
+                              <tr key={pessoa.id} className="border-b hover:bg-gray-50">
+                                <td className="py-3 font-medium">{pessoa.nome || 'N/A'}</td>
+                                <td className="py-3 text-gray-600">{pessoa.email || 'N/A'}</td>
+                                <td className="py-3 text-gray-600">{pessoa.funcao || 'N/A'}</td>
+                                <td className="py-3">
+                                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
+                                    Ativo
+                                  </span>
+                                </td>
+                                <td className="py-3">
+                                  <button className="text-blue-600 hover:text-blue-800 mr-3">
+                                    Editar
+                                  </button>
+                                  <button className="text-red-600 hover:text-red-800">
+                                    Remover
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-bold text-lg mb-4 text-yellow-600">âš¡ Em Progresso</h3>
-              <div className="space-y-2">
-                <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-500">
-                  <p className="font-semibold">Tarefa 2</p>
-                  <p className="text-sm text-gray-600">DescriÃ§Ã£o da tarefa</p>
+              )}
+
+              {/* FINANCEIRO */}
+              {currentPage === 'financeiro' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Financeiro</h2>
+                    <p className="text-gray-600">Receitas, Despesas e Movimento Financeiro</p>
+                  </div>
+
+                  {/* CARDS DE RESUMO */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-lg shadow p-6">
+                      <p className="text-gray-600 text-sm mb-2">Total de Receitas</p>
+                      <p className="text-3xl font-bold text-green-600">
+                        R$ {receitas.reduce((sum, r) => sum + (r.valor || 0), 0).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">{receitas.length} registros</p>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow p-6">
+                      <p className="text-gray-600 text-sm mb-2">Total de Despesas</p>
+                      <p className="text-3xl font-bold text-red-600">
+                        R$ {despesas.reduce((sum, d) => sum + (d.valor || 0), 0).toFixed(2)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">{despesas.length} registros</p>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow p-6">
+                      <p className="text-gray-600 text-sm mb-2">Saldo LÃ­quido</p>
+                      <p className={`text-3xl font-bold ${
+                        (receitas.reduce((sum, r) => sum + (r.valor || 0), 0) - 
+                         despesas.reduce((sum, d) => sum + (d.valor || 0), 0)) >= 0
+                          ? 'text-blue-600'
+                          : 'text-red-600'
+                      }`}>
+                        R$ {(receitas.reduce((sum, r) => sum + (r.valor || 0), 0) - 
+                            despesas.reduce((sum, d) => sum + (d.valor || 0), 0)).toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* RECEITAS */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold">Receitas</h3>
+                      <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                        + Adicionar Receita
+                      </button>
+                    </div>
+
+                    {receitas.length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">Nenhuma receita cadastrada</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {receitas.map(receita => (
+                          <div key={receita.id} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
+                            <div>
+                              <p className="font-medium">{receita.descricao || 'Receita'}</p>
+                              <p className="text-sm text-gray-600">{new Date(receita.data).toLocaleDateString()}</p>
+                            </div>
+                            <p className="text-green-600 font-bold">+ R$ {receita.valor?.toFixed(2)}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* DESPESAS */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold">Despesas</h3>
+                      <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                        + Adicionar Despesa
+                      </button>
+                    </div>
+
+                    {despesas.length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">Nenhuma despesa cadastrada</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {despesas.map(despesa => (
+                          <div key={despesa.id} className="flex justify-between items-center p-3 border rounded hover:bg-gray-50">
+                            <div>
+                              <p className="font-medium">{despesa.descricao || 'Despesa'}</p>
+                              <p className="text-sm text-gray-600">{new Date(despesa.data).toLocaleDateString()}</p>
+                            </div>
+                            <p className="text-red-600 font-bold">- R$ {despesa.valor?.toFixed(2)}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-bold text-lg mb-4 text-green-600">âœ… ConcluÃ­do</h3>
-              <div className="space-y-2">
-                <div className="bg-green-50 p-3 rounded border-l-4 border-green-500">
-                  <p className="font-semibold">Tarefa 3</p>
-                  <p className="text-sm text-gray-600">DescriÃ§Ã£o da tarefa</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
-
